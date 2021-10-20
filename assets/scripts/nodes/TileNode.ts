@@ -1,4 +1,4 @@
-import { TileColor, Tile } from "../model/Tile";
+import { Tile } from "../model/Tile";
 import { Event } from "../utils/Event"
 
 const { ccclass, property } = cc._decorator;
@@ -8,34 +8,59 @@ export default class TileNode extends cc.Component {
     @property(cc.Sprite) tileIcon: cc.Sprite = null
     @property([cc.SpriteFrame]) icons = new Array<cc.SpriteFrame>()
 
-    _tile: Tile
-    onClickEvent = new Event
+    private _tile: Tile
 
     setTileInfo(t: Tile) {
         this._tile = t
     }
 
     onLoad() {
-        this.tileIcon.spriteFrame = this.icons[this._tile.color]
+        if (this._tile.isNormal) this.tileIcon.spriteFrame = this.icons[this._tile.state - 1]
+        this._tile.onRemove.add(this.node, (tile: Tile) => this.destroyAction())
+        this._tile.onUpdatePosition.add(this.node, (pos) => this.move(pos))
+        this._tile.onUpdate.add(this.node, (tile: Tile) => this.refresh(tile))
+        this._tile.onNoCombo.add(this.node, () => this.noComboAction())
     }
 
     onClick() {
-        cc.log("1")
-        this._tile.activate()
+        this._tile.action()
     }
 
     noComboAction() {
+        let rotate = cc.tween()
+            .to(0.08, { rotation: 30 })
+            .to(0.08, { rotation: -30 })
 
+        cc.tween(this.node)
+            .then(rotate)
+            .repeat(2)
+            .to(0.08, { rotation: 0 })
+            .start()
     }
 
     destroyAction() {
         this.node.opacity = 0
     }
 
-    dropTile() {
-
+    move(pos) {
+        if (this._tile.isNormal) {
+            cc.tween(this.node)
+            .to(
+                0.6,
+                { position: cc.v3(pos.y * 41, -pos.x * 41) }
+            )
+            .start()
+        } else {
+            this.node.setPosition(cc.v3(pos.y * 41, -pos.x * 41))
+        }
     }
 
+    refresh(tile) {
+        setTimeout(() => {
+            this.node.opacity = 255
+            if (this._tile.isNormal) this.tileIcon.spriteFrame = this.icons[this._tile.state - 1]    
+        }, 700);
+    }
     
 
     // setPositionAction(position, time: Number = null, showIn = false) {

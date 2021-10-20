@@ -1,7 +1,8 @@
 import { randomInteger } from "../utils/Utils"
 import { Event } from "../utils/Event"
 
-export const enum TileColor {
+export const enum TileState {
+    Empty,
     Red,
     Blue,
     Green,
@@ -10,38 +11,58 @@ export const enum TileColor {
     Count
 }
 
-export const enum TileState {
-    Normal,
-    Removed
-}
-
 export class Tile {
     private _pos: cc.Vec2
-    private _color: TileColor
     private _state: TileState
 
     // TODO rename
-    onActivate = new Event
+    onAction = new Event
+    onRemove = new Event
+    onUpdatePosition = new Event
+    onUpdate = new Event
+    onNoCombo = new Event
 
-    get color() { return this._color }
     get state() { return this._state }
     get pos() { return this._pos }
-    get isRemoved() { return this._state == TileState.Removed }
-    get isNormal() { return this._state == TileState.Normal }
+    get isRemoved() { return this._state == TileState.Empty }
+    get isNormal() { return this._state != TileState.Empty && this._state != TileState.Count }
     
     set state(s: TileState) { this._state = s }
 
     static getRandomTile() {
-        return randomInteger(TileColor.Red + 1, TileColor.Count - 1)
+        return randomInteger(TileState.Red, TileState.Count - 1)
     }
 
-    constructor(pos: cc.Vec2, color?: TileColor) {
+    constructor(pos: cc.Vec2, color?: TileState) {
         this._pos = pos
-        this._color = color ? color : Tile.getRandomTile()
-        this._state = TileState.Normal
+        this._state = color ? color : Tile.getRandomTile()
     }
     
-    activate() { 
-        cc.log("2")
-        this.onActivate.dispatch(this) }
+    action() { 
+        cc.log("[TILE] action", this)
+        this.onAction.dispatch(this) 
+    }
+
+    noCombo() {
+        this.onNoCombo.dispatch()
+    }
+
+    remove() {
+        cc.log("[TILE] remove", this)
+        this._state = TileState.Empty
+        this.onRemove.dispatch(this)
+    }
+
+    updatePos(newPos: cc.Vec2) {
+        cc.log("[TILE] update position", newPos, this)
+        this._pos = newPos
+        this.onUpdatePosition.dispatch(newPos)
+    }
+
+    updateState() {
+        cc.log("[TILE] old state", this)
+        this._state = Tile.getRandomTile()
+        cc.log("[TILE] new state", this)
+        this.onUpdate.dispatch(this)
+    }
 }
