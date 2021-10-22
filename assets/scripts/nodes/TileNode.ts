@@ -1,5 +1,5 @@
 import { Tile } from "../model/Tile";
-import { Event } from "../utils/Event"
+import AnimationController from "../utils/AnimationController";
 
 const { ccclass, property } = cc._decorator;
 
@@ -20,6 +20,7 @@ export default class TileNode extends cc.Component {
         this._tile.onUpdatePosition.add(this.node, (pos) => this.move(pos))
         this._tile.onUpdate.add(this.node, (tile: Tile) => this.refresh(tile))
         this._tile.onNoCombo.add(this.node, () => this.noComboAction())
+        this._updateZindex()
     }
 
     onClick() {

@@ -22,7 +22,6 @@ export default class GridNode extends cc.Component {
         let grid = new Grid(new cc.Vec2(w, h))
         grid.onAddTile.add(this.node, (tile: Tile) => this.createTile(tile))
         this._grid = grid
-        this._maxZIndexTile = w * h
         grid.addTiles()
     }
 
@@ -30,7 +29,6 @@ export default class GridNode extends cc.Component {
         let tileNode = cc.instantiate(this.tilePrefab)
         tileNode.getComponent(TileNode).setTileInfo(tile)
         tileNode.setPosition(tile.pos.y * 41, -tile.pos.x * 41)
-        this.node.addChild(tileNode, this._maxZIndexTile)
-        this._maxZIndexTile--
+        this.node.addChild(tileNode)
     }
 }
