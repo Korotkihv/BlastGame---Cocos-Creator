@@ -1,5 +1,4 @@
 import { Tile } from "../model/Tile";
-import AnimationController from "../utils/AnimationController";
 
 const { ccclass, property } = cc._decorator;
 
@@ -10,16 +9,14 @@ export default class TileNode extends cc.Component {
 
     private _tile: Tile
 
+    get tile() { return this._tile }
+
     setTileInfo(t: Tile) {
         this._tile = t
     }
 
     onLoad() {
         if (this._tile.isNormal) this.tileIcon.spriteFrame = this.icons[this._tile.state - 1]
-        this._tile.onRemove.add(this.node, (tile: Tile) => this.destroyAction())
-        this._tile.onUpdatePosition.add(this.node, (pos) => this.move(pos))
-        this._tile.onUpdate.add(this.node, (tile: Tile) => this.refresh(tile))
-        this._tile.onNoCombo.add(this.node, () => this.noComboAction())
         this._updateZindex()
     }
 
@@ -40,83 +37,74 @@ export default class TileNode extends cc.Component {
     }
 
     destroyAction() {
-        this.node.opacity = 0
+        if (this._tile.isBooster) return
+        // cc.tween(this.node)
+        //     .call(() => this.node.opacity = 0)
+        //     .start()
+        cc.tween(this.node)
+            .to(0.1, { scale: 1.1 })
+            .to(0.15, { scale: 0 })
+            .call(() => this.node.opacity = 0)
+            .to(1, { scale: 1 })
+            .start()
+            
     }
 
-    move(pos) {
-        if (this._tile.isNormal) {
-            cc.tween(this.node)
-            .to(
-                0.6,
-                { position: cc.v3(pos.y * 41, -pos.x * 41) }
+    move() {
+        cc.tween(this.node)
+                .to(0.4, { position: cc.v3(this.tile.pos.y * 43, -this.tile.pos.x * 43) }, { easing: 'cobicOut'})
+                .call(() => {
+                    this._updateZindex()
+                })
+                .start()
+    }
+
+    moveRemoveTiles() {
+        if (this._tile.isBooster) return
+        cc.tween(this.node)
+            .call(() => {
+                this.node.scale = 0
+                this.node.opacity = 255
+                if (this._tile.isNormal) this.tileIcon.spriteFrame = this.icons[this._tile.state - 1] 
+                this.node.setPosition(cc.v2(this.tile.pos.y * 43, -this.tile.pos.x * 43))
+                this._updateZindex()
+            })
+            .parallel(
+                cc.tween(this.node).to(0.5, { rotation: 360 }),
+                cc.tween(this.node).to(0.5, { scale: 1 })
             )
             .start()
-        } else {
-            this.node.setPosition(cc.v3(pos.y * 41, -pos.x * 41))
-        }
     }
 
-    refresh(tile) {
-        setTimeout(() => {
-            this.node.opacity = 255
-            if (this._tile.isNormal) this.tileIcon.spriteFrame = this.icons[this._tile.state - 1]    
-        }, 700);
+    moveNewPos() {
+        cc.tween(this.node).parallel(
+            cc.tween(this.node)
+                .to(0.6, { position: cc.v3(this._tile.pos.y * 43, -this._tile.pos.x * 43) }),
+            cc.tween(this.node)
+                .to(0.3, { scale: 1.2 })  
+                .to(0.3, { scale: 1 })  
+            
+        )
+        .call(() => {
+            this._updateZindex()
+        })
+        .start()
     }
-    
 
-    // setPositionAction(position, time: Number = null, showIn = false) {
-    //     return new Promise((resolve) => {
-    //         if (time == null) time = this.durationMoveTo;
-    //         if (showIn) {
-    //             this.node.opacity = 99;
-    //             this.node.runAction(cc.fadeIn(this.durationActionFadeIn));
-    //         }
+    refresh() {
+        cc.tween(this.node)
+            .call(() => {
+                this.node.scale = 0
+                if (this._tile.isNormal) this.tileIcon.spriteFrame = this.icons[this._tile.state - 1] 
+            })
+            .parallel(
+                cc.tween(this.node).to(0.5, { rotation: 720 }),
+                cc.tween(this.node).to(0.5, { scale: 1 })
+            )
+            .start()
+    }
 
-    //         this.node.runAction(
-    //             cc.sequence(
-    //                 cc
-    //                     .moveTo(this.durationActionRemove, position)
-    //                     .easing(cc.easeBackInOut()),
-    //                 cc.callFunc(() => {
-    //                     resolve();
-    //                 })
-    //             )
-    //         );
-    //     });
-    // }
-
-    // setPositionActionRemove(position = null, showIn = false) {
-    //     position = position || this.node.position;
-    //     return new Promise((resolve) => {
-    //         if (showIn) {
-    //             this.node.opacity = 99;
-    //             this.node.runAction(cc.fadeIn(this.durationActionFadeIn));
-    //         }
-
-    //         cc.tween(this.node)
-    //             .to(
-    //                 this.durationMoveTo,
-    //                 { position: position, scale: 0 },
-    //                 { easing: "backIn" }
-    //             )
-    //             .call(() => {
-    //                 this.node.destroy();
-    //                 resolve(this.node);
-    //             })
-    //             .start();
-    //     });
-    // }
-
-    // noComboAnimation() {
-    //     let rotate = cc
-    //         .tween()
-    //         .to(0.08, { rotation: 30 })
-    //         .to(0.08, { rotation: -30 });
-
-    //     cc.tween(this.node)
-    //         .then(rotate)
-    //         .repeat(2)
-    //         .to(0.08, { rotation: 0 })
-    //         .start();
-    // }
+    private _updateZindex() {
+        this.node.zIndex = -("" + this._tile.pos.x + this._tile.pos.y)
+    }
 }
