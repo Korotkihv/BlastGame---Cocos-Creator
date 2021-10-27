@@ -22,11 +22,7 @@ export class Tile {
     private _pos: cc.Vec2
     private _state: TileState
 
-    // TODO rename
     onAction = new Event
-    onRemove = new Event
-    onUpdatePosition = new Event
-    onUpdate = new Event
     onNoCombo = new Event
 
     get state() { return this._state }
@@ -34,7 +30,6 @@ export class Tile {
     get isRemoved() { return this._state == TileState.Empty }
     get isNormal() { return this._state != TileState.Empty && this._state != TileState.CountColor && this._state != TileState.BoosterCount }
     get isBooster() { return this.state > TileState.CountColor && this.state < TileState.BoosterCount}
-        // .includes('car') }
     
     set state(s: TileState) { this._state = s }
 
@@ -46,9 +41,12 @@ export class Tile {
         this._pos = pos
         this._state = color ? color : Tile.getRandomTile()
     }
+
+    compare(tile: Tile) {
+        return tile.pos.x == this.pos.x && tile.pos.y == this.pos.y
+    }
     
     action() { 
-        // cc.log("[TILE] action", this)
         this.onAction.dispatch(this) 
     }
 
@@ -57,22 +55,15 @@ export class Tile {
     }
 
     remove() {
-        // cc.log("[TILE] remove", this)
         this._state = TileState.Empty
-        this.onRemove.dispatch(this)
     }
 
     updatePos(newPos: cc.Vec2) {
-        // cc.log("[TILE] update position", newPos, this)
         this._pos = newPos
-        this.onUpdatePosition.dispatch(newPos)
     }
 
     updateState() {
-        // cc.log("[TILE] old state", this)
         this._state = Tile.getRandomTile()
-        // cc.log("[TILE] new state", this)
-        this.onUpdate.dispatch(this)
     }
 
     createBomb(state: TileState) {

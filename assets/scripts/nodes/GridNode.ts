@@ -1,6 +1,7 @@
 import { Grid, GridChangesInfo, GridChangesType } from "../model/Grid";
 import TileNode from "./TileNode";
 import { Tile } from "../model/Tile";
+import Global from "../Global";
 
 const { ccclass, property } = cc._decorator;
 @ccclass
@@ -18,12 +19,13 @@ export default class GridNode extends cc.Component {
     }
 
     onLoad() {
+        Global.m = new Global()
         this._tileSize = this.tilePrefab.data.getContentSize().width
-        this.createGrid(11, 11)
+        this.createGrid(Global.m.config.GridSize)
     }
     
-    createGrid(w, h) {
-        let grid = new Grid(new cc.Vec2(w, h))
+    createGrid(size: cc.Vec2) {
+        let grid = new Grid(size)
         grid.onAddTile.add(this.node, (tile: Tile) => this.createTile(tile))
         grid.onChangeGrid.add(this.node, (changesInfo: GridChangesInfo) => this.changeGrid(changesInfo))
         this._grid = grid
@@ -33,7 +35,7 @@ export default class GridNode extends cc.Component {
     createTile(tile: Tile) {
         let tileNode = cc.instantiate(this.tilePrefab)
         tileNode.getComponent(TileNode).setTileInfo(tile)
-        tileNode.setPosition(tile.pos.y * 43, -tile.pos.x * 43)
+        tileNode.setPosition(tile.pos.y * this._tileSize, -tile.pos.x * this._tileSize)
         this.node.addChild(tileNode)
     }
 
@@ -47,21 +49,19 @@ export default class GridNode extends cc.Component {
 
     simpleChange(changesInfo: GridChangesInfo) {
         cc.tween(this.node)
-            .call(() => changesInfo.removedTiles.forEach(t => this.getTileNode(t).destroyAction()))
-            .call(() => changesInfo.booster && this.getTileNode(changesInfo.booster).refresh())
-            .call(() => changesInfo.dropTiles.forEach(t => this.getTileNode(t).move()))
-            .delay(0.6)
-            .call(() => changesInfo.removedTiles.forEach(t => this.getTileNode(t).moveRemoveTiles()))
+            .call(() => changesInfo.removedTiles.forEach(t => this.getTileNode(t).removeAnimation()))            
+            .call(() => changesInfo.activeTile.isBooster && this.getTileNode(changesInfo.activeTile).createBombAnimation())
+            .call(() => changesInfo.dropTiles.forEach(t => this.getTileNode(t).dropAnimation()))
+            .delay(1.2)
+            .call(() => changesInfo.removedTiles.forEach(t => this.getTileNode(t).updateRemoveTileAnimation()))
             .start()
     }
 
     boosterChange(changesInfo: GridChangesInfo) {
         cc.tween(this.node)
-            .call(() => changesInfo.removedTiles.forEach(t => this.getTileNode(t).destroyAction()))
-            .delay(0.1)
-            .call(() => changesInfo.dropTiles.forEach(t => this.getTileNode(t).move()))
-            .delay(0.6)
-            .call(() => changesInfo.removedTiles.forEach(t => this.getTileNode(t).moveRemoveTiles()))
+            .call(() => changesInfo.removedTiles.forEach(t => this.getTileNode(t).removeAnimation()))
+            .call(() => changesInfo.dropTiles.forEach(t => this.getTileNode(t).dropAnimation()))
+            .call(() => changesInfo.removedTiles.forEach(t => this.getTileNode(t).updateRemoveTileAnimation()))
             .start()
     }
 }
