@@ -61,6 +61,7 @@ export default class GridNode extends cc.Component {
         cc.tween(this.node)
             .call(() => changesInfo.removedTiles.forEach(t => this.getTileNode(t).removeAnimation()))
             .call(() => changesInfo.dropTiles.forEach(t => this.getTileNode(t).dropAnimation()))
+            .delay(1.2)
             .call(() => changesInfo.removedTiles.forEach(t => this.getTileNode(t).updateRemoveTileAnimation()))
             .start()
     }
