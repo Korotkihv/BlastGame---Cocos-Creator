@@ -5,7 +5,8 @@ import Global from "../Global"
 
 
 export const enum GridState {
-    Stable = 0,
+    NotReady = 0,
+    Ready,
     CheckCanMove,
     Move,
     FullStop
@@ -26,9 +27,10 @@ export class GridChangesInfo {
     reshafle: boolean
     booster: Tile
 
-    constructor(type: GridChangesType, activeTile: Tile) {
+    constructor(type: GridChangesType, activeTile?: Tile) {
         this.type = type
-        this.activeTile = activeTile
+        // TODO ???
+        this.activeTile = activeTile ? activeTile : null
     }
 }
 
@@ -36,31 +38,69 @@ export class Grid {
     private _size: cc.Vec2 = null
     private _board: Array<Array<Tile>> = []
     private _connectedTilesArray: Array<Tile> = []
+    private _state = GridState.NotReady
 
-    private _colors = [TileState.Red, TileState.Blue, TileState.Green, TileState.Purple, TileState.Yellow]
-    private _lineBombs = [TileState.Horizontal, TileState.Vertical]
-
-    constructor(size: cc.Vec2) {
-       this._size = size
+    constructor() {
+       this._size = Global.m.config.GridSize
+       this._addTiles()
     }
 
     onChangeGrid = new Event
-    onAddTile = new Event
 
     get rowsCount() { return this._size.x }
     get columnCount() { return this._size.y }
     get board() { return this._board }
+    get isBlock() { return this._state == GridState.Move || this._state == GridState.FullStop }
 
-    addTiles() {
+    removeBlock() {
+        this._state = GridState.Ready
+    }
+
+    private _addTiles() {
         for (let row = 0; row < this._size.x; row++) {
             this._board.push([])
             for (let column = 0; column < this._size.y; column++) {
                 let tile = new Tile(cc.v2(row, column))
-                tile.onAction.add(this, this._changeGrid.bind(this))
+                tile.onAction.add(this, () => {
+                    if (this.isBlock) return
+                    this._state = GridState.Move
+                    this._changeGrid(tile)
+                })
                 this._board[row].push(tile)
-                this.onAddTile.dispatch(tile)
-            } 
+            }
         }
+        this._reshufleGridIfNeeded()
+    }
+
+    reshufle = []
+    private _reshufleGridIfNeeded() {
+        if (!this._needReshufle()) return
+        const updateAllTiles = () => {
+            for (let row = 0; row < this._size.x; row++) {
+                for (let column = 0; column < this._size.y; column++) {
+                    this._board[row][column].updatePos(cc.v2(row, column))
+                }
+            }
+        }
+        let allTiles = []
+        this._board.forEach(r => allTiles = allTiles.concat(r))
+        shuffle(allTiles)
+        let newBoard = chunkArray(allTiles, this._size.x)
+        this._board = newBoard
+        updateAllTiles()
+        this.reshufle = allTiles
+        this._reshufleGridIfNeeded()
+    }
+
+    _needReshufle() {
+        for (let row = 0; row < this._size.x; row++) {
+            for (let column = 0; column < this._size.y; column++) {
+                if (this._getListConnectedTiles(cc.v2(row, column)).length > 1) {
+                    return false
+                }
+            }
+        }
+        return true
     }
 
     private _getTile(pos: cc.Vec2) { return this._board[pos.x][pos.y] }
@@ -148,9 +188,10 @@ export class Grid {
         let getBombType = tilesRemoveCount => {
             if (tilesRemoveCount >= Global.m.config.BoosterMegaBombTilesCount) {
                 return TileState.RemoveAll
-            } else if (tilesRemoveCount >= Global.m.config.BoosterReshufleTilesCount) {
-                return TileState.Reshafle
-            } else if (tilesRemoveCount >= Global.m.config.BoosterRandomTilesCount) {
+            // } else if (tilesRemoveCount >= Global.m.config.BoosterReshufleTilesCount) {
+            //     return TileState.Reshafle
+            // } else if (tilesRemoveCount >= Global.m.config.BoosterRandomTilesCount) {
+            } else {
                 let boostersList = Global.m.config.SimpleBoostersList
                 return boostersList[randomInteger(0, boostersList.length - 1)]
             }
@@ -164,7 +205,7 @@ export class Grid {
         let isVertical = tile.state == TileState.Vertical
         let lineLenght = isVertical ? this._size.y : this._size.x
         for (let line = 0; line < lineLenght; line++) {
-            let removeTile = isVertical ? this._board[tile.pos.x][line] : this._board[line][tile.pos.y]
+            let removeTile = isVertical ? this._board[line][tile.pos.y] : this._board[tile.pos.x][line]
             r = r.concat(this._removeWithBooster(removeTile, tile))
         } 
         return r
@@ -200,54 +241,47 @@ export class Grid {
         return r
     }
 
-    private _reshufleGrid() {
-        const updateAllTiles = () => {
-            for (let row = 0; row < this._size.x; row++) {
-                for (let column = 0; column < this._size.y; column++) {
-                    this._board[row][column].updatePos(cc.v2(row, column))
-                }
-            }
-        }
-        let allTiles = []
-        this._board.forEach(r => allTiles = allTiles.concat(r))
-        shuffle(allTiles)
-        let newBoard = chunkArray(allTiles, this._size.x)
-        this._board = newBoard
-        updateAllTiles()
-
-        return allTiles
-    }
-
-    private _checkGame() {
-        for (let row = 0; row < this._size.x; row++) {
-            for (let column = 0; column < this._size.y; column++) {
-                if (this._getListConnectedTiles(cc.v2(row, column)).length > 1) {
-                    return true
-                }
-            }
-        }
-        return false
-    }
-
     private _changeGrid(tile: Tile) {
-        let changes = new GridChangesInfo(tile.isBooster ? GridChangesType.Booster : GridChangesType.Simple, tile)
+        let changeType = tile.isBooster 
+            ? tile.isReshufleBooster ? GridChangesType.Reshufle : GridChangesType.Booster 
+            : GridChangesType.Simple
+
+        let changes = new GridChangesInfo(changeType, tile)
         if (tile.isBooster) {
-            changes.removedTiles = this._boosterActivate(tile)
-            changes.dropTiles = this._dropTiles()
+            if (tile.state == TileState.Reshafle) {
+                this._reshufleGridIfNeeded()
+                tile.remove()
+                changes.removedTiles = [tile]
+                changes.reshafle = true
+            } else {
+                changes.removedTiles = this._boosterActivate(tile)
+                changes.dropTiles = this._dropTiles()
+            }
         } else {
             if (this._canMakeMove(tile)) return
             changes.removedTiles = this._removeConnectedTiles(tile)
-            if (changes.removedTiles.length >= Math.min(...Global.m.config.ListBoosterTilesCount)) this._createBomb(tile, changes.removedTiles.length)
+            if (changes.removedTiles.length >= Math.min(...Global.m.config.ListBoosterTilesCount)) {
+                this._createBomb(tile, changes.removedTiles.length)
+            }
             changes.dropTiles = this._dropTiles()
         }
         this._fillGrid()
+
+        if (this._needReshufle()) {
+            this._reshufleGridIfNeeded()
+            changes.reshafle = true
+        }
+
         this.onChangeGrid.dispatch(changes)
     }
 
     private _canMakeMove(tile: Tile) {
         let tiles = this._getListConnectedTiles(tile.pos)
         let canMakeMove = tiles.length <= 1
-        canMakeMove && tile.onNoCombo.dispatch()
+        if (canMakeMove) {
+            tile.onNoCombo.dispatch()
+            this._state = GridState.Ready
+        }
         return canMakeMove
     }
 
@@ -256,8 +290,7 @@ export class Grid {
         switch(tile.state) {
             case TileState.Bomb:      removedTiles = this._useBomb(tile); break
             case TileState.RemoveAll: removedTiles = this._useSuperBomb(); break
-            // case TileState.Reshafle:
-            //     removedTiles = this._reshufle(tile); break
+            // case TileState.Reshafle:  removedTiles = this._reshufleGrid(); break
             case TileState.Horizontal:
             case TileState.Vertical:
                 removedTiles = this._useLine(tile); break
@@ -274,7 +307,6 @@ export class Grid {
                     log[row].push([this._board[row][column].state, this._board[row][column].pos.x, this._board[row][column].pos.y])
                 } 
             }
-            cc.log(log)
         }
     }
 } 

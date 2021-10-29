@@ -30,6 +30,7 @@ export class Tile {
     get isRemoved() { return this._state == TileState.Empty }
     get isNormal() { return this._state != TileState.Empty && this._state != TileState.CountColor && this._state != TileState.BoosterCount }
     get isBooster() { return this.state > TileState.CountColor && this.state < TileState.BoosterCount}
+    get isReshufleBooster() { return this.state == TileState.Reshafle}
     
     set state(s: TileState) { this._state = s }
 
