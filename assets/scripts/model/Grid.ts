@@ -31,6 +31,7 @@ export class GridChangesInfo {
         this.type = type
         // TODO ???
         this.activeTile = activeTile ? activeTile : null
+        this.reshafle = false
     }
 }
 
@@ -56,25 +57,8 @@ export class Grid {
         this._state = GridState.Ready
     }
 
-    private _addTiles() {
-        for (let row = 0; row < this._size.x; row++) {
-            this._board.push([])
-            for (let column = 0; column < this._size.y; column++) {
-                let tile = new Tile(cc.v2(row, column))
-                tile.onAction.add(this, () => {
-                    if (this.isBlock) return
-                    this._state = GridState.Move
-                    this._changeGrid(tile)
-                })
-                this._board[row].push(tile)
-            }
-        }
-        this._reshufleGridIfNeeded()
-    }
-
-    reshufle = []
-    private _reshufleGridIfNeeded() {
-        if (!this._needReshufle()) return
+    reshufleGridIfNeeded(forceReshufle = false) {
+        if (!this._needReshufle() && !forceReshufle) return
         const updateAllTiles = () => {
             for (let row = 0; row < this._size.x; row++) {
                 for (let column = 0; column < this._size.y; column++) {
@@ -88,14 +72,43 @@ export class Grid {
         let newBoard = chunkArray(allTiles, this._size.x)
         this._board = newBoard
         updateAllTiles()
-        this.reshufle = allTiles
-        this._reshufleGridIfNeeded()
+        this.reshufleGridIfNeeded()
     }
 
-    _needReshufle() {
+    logBoard() {
+        if (this._board) {
+            let log = []
+            for (let row = 0; row < this._size.x; row++) {
+                log.push([])
+                for (let column = 0; column < this._size.y; column++) {
+                    log[row].push([this._board[row][column].state, this._board[row][column].pos.x, this._board[row][column].pos.y])
+                } 
+            }
+            cc.log("")
+        }
+    }
+
+    private _addTiles() {
+        for (let row = 0; row < this._size.x; row++) {
+            this._board.push([])
+            for (let column = 0; column < this._size.y; column++) {
+                let tile = new Tile(cc.v2(row, column))
+                tile.onAction.add(this, () => {
+                    if (this.isBlock) return
+                    this._state = GridState.Move
+                    this._changeGrid(tile)
+                })
+                this._board[row].push(tile)
+            }
+        }
+        this.reshufleGridIfNeeded()
+    }
+
+    private _needReshufle() {
         for (let row = 0; row < this._size.x; row++) {
             for (let column = 0; column < this._size.y; column++) {
-                if (this._getListConnectedTiles(cc.v2(row, column)).length > 1) {
+                let tilePos = cc.v2(row, column)
+                if (this._getListConnectedTiles(tilePos).length > 1 || this._getTile(tilePos).isBooster) {
                     return false
                 }
             }
@@ -190,7 +203,8 @@ export class Grid {
                 return TileState.RemoveAll
             // } else if (tilesRemoveCount >= Global.m.config.BoosterReshufleTilesCount) {
             //     return TileState.Reshafle
-            // } else if (tilesRemoveCount >= Global.m.config.BoosterRandomTilesCount) {
+            } else if (tilesRemoveCount >= Global.m.config.BoosterReshufleTilesCount) {
+                return TileState.Reshafle
             } else {
                 let boostersList = Global.m.config.SimpleBoostersList
                 return boostersList[randomInteger(0, boostersList.length - 1)]
@@ -242,35 +256,22 @@ export class Grid {
     }
 
     private _changeGrid(tile: Tile) {
-        let changeType = tile.isBooster 
-            ? tile.isReshufleBooster ? GridChangesType.Reshufle : GridChangesType.Booster 
-            : GridChangesType.Simple
-
+        let changeType = tile.isBooster ? GridChangesType.Booster : GridChangesType.Simple
         let changes = new GridChangesInfo(changeType, tile)
+        
         if (tile.isBooster) {
-            if (tile.state == TileState.Reshafle) {
-                this._reshufleGridIfNeeded()
-                tile.remove()
-                changes.removedTiles = [tile]
-                changes.reshafle = true
-            } else {
-                changes.removedTiles = this._boosterActivate(tile)
-                changes.dropTiles = this._dropTiles()
-            }
+            changes.reshafle = tile.state == TileState.Reshafle
+            changes.removedTiles = this._boosterActivate(tile)
         } else {
             if (this._canMakeMove(tile)) return
             changes.removedTiles = this._removeConnectedTiles(tile)
             if (changes.removedTiles.length >= Math.min(...Global.m.config.ListBoosterTilesCount)) {
                 this._createBomb(tile, changes.removedTiles.length)
             }
-            changes.dropTiles = this._dropTiles()
         }
+        changes.dropTiles = this._dropTiles()
         this._fillGrid()
-
-        if (this._needReshufle()) {
-            this._reshufleGridIfNeeded()
-            changes.reshafle = true
-        }
+        if (this._needReshufle()) changes.reshafle = true
 
         this.onChangeGrid.dispatch(changes)
     }
@@ -290,23 +291,13 @@ export class Grid {
         switch(tile.state) {
             case TileState.Bomb:      removedTiles = this._useBomb(tile); break
             case TileState.RemoveAll: removedTiles = this._useSuperBomb(); break
-            // case TileState.Reshafle:  removedTiles = this._reshufleGrid(); break
+            case TileState.Reshafle:  
+                tile.remove()
+                removedTiles = [tile]; break
             case TileState.Horizontal:
             case TileState.Vertical:
                 removedTiles = this._useLine(tile); break
         }
         return removedTiles
-    }
-
-    logBoard() {
-        if (this._board) {
-            let log = []
-            for (let row = 0; row < this._size.x; row++) {
-                log.push([])
-                for (let column = 0; column < this._size.y; column++) {
-                    log[row].push([this._board[row][column].state, this._board[row][column].pos.x, this._board[row][column].pos.y])
-                } 
-            }
-        }
     }
 } 

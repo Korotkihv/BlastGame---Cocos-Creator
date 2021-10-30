@@ -27,8 +27,19 @@ export class GameController extends cc.Component {
         })
 
         this.gridView.createGrid(this._grid).then(() => {
-            this.gridView.onAnimationCompleted.add(this.node, () => this._grid.removeBlock())
+            // needReshufl маленький хак чтобы решафл происходил после стабилизации вьюшного поля
+            // TODO вынести reshufle в модель
+            this.gridView.onAnimationCompleted.add(this.node, needReshufle => {
+                if (needReshufle) this.reshufleGrid()
+                else this._grid.removeBlock()
+            })
         })
         this.conditionalView.setConditional(this._conditional)
+    }
+
+    reshufleGrid() {
+        const forceReshufle = true
+        this._grid.reshufleGridIfNeeded(forceReshufle)
+        this.gridView.reshufleChange()
     }
 }

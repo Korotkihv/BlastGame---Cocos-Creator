@@ -37,16 +37,10 @@ export default class GridNode extends cc.Component {
     }
 
     changeGrid(changesInfo: GridChangesInfo) {
-        if (changesInfo.reshafle) {
-            this.reshufleChange(changesInfo)
+        if (changesInfo.type == GridChangesType.Simple) {
+            this.simpleChange(changesInfo)
         } else {
-            if (changesInfo.type == GridChangesType.Simple) {
-                this.simpleChange(changesInfo)
-            } else if (changesInfo.type == GridChangesType.Reshufle) {
-                this.reshufleChange(changesInfo)
-            } else {
-                this.boosterChange(changesInfo)
-            }
+            this.boosterChange(changesInfo)
         }
     }
 
@@ -55,22 +49,18 @@ export default class GridNode extends cc.Component {
         changesInfo.activeTile.isBooster && await this.getTileNode(changesInfo.activeTile).createBombAnimation()
         await Promise.all(changesInfo.dropTiles.map(t => this.getTileNode(t).dropAnimation()))
         await Promise.all(changesInfo.removedTiles.map(t => this.getTileNode(t).updateRemoveTileAnimation()))
-        await this.onAnimationCompleted.dispatch()
+        await this.onAnimationCompleted.dispatch(changesInfo.reshafle)
     }
 
     async boosterChange(changesInfo: GridChangesInfo) {
         await Promise.all(changesInfo.removedTiles.map(t => this.getTileNode(t).removeAnimation()))
         await Promise.all(changesInfo.dropTiles.map(t => this.getTileNode(t).dropAnimation()))
         await Promise.all(changesInfo.removedTiles.map(t => this.getTileNode(t).updateRemoveTileAnimation()))
-        await this.onAnimationCompleted.dispatch()
+        await this.onAnimationCompleted.dispatch(changesInfo.reshafle)
     }
 
-    async reshufleChange(changesInfo: GridChangesInfo) {
-        await Promise.all(changesInfo.removedTiles.map(t => this.getTileNode(t).removeAnimation()))
+    async reshufleChange() {
         await Promise.all(this.tiles.children.map(t => t.getComponent(TileNode).reshufleAnimation()))
-        // await Promise.all(changesInfo.dropTiles.map(t => this.getTileNode(t).dropAnimation()))
-        // await Promise.all(changesInfo.removedTiles.map(t => this.getTileNode(t).updateRemoveTileAnimation()))
-        // await Promise.all(new Promise(r => { cc.tween(this.node).delay(2).call(r).start}))
         await this.onAnimationCompleted.dispatch()
     }
 }

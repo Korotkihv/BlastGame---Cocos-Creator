@@ -118,20 +118,10 @@ export default class TileNode extends cc.Component {
 
     reshufleAnimation() {
         let endPos = cc.v3(this.tile.pos.y * this._tileSize, -this.tile.pos.x * this._tileSize)
-
-        const scaleTime1 = 0.08 
-        const scaleTime2 = 0.1 
-        let scale = cc.tween()
-            .by(scaleTime1 * this._animationSpeed, { scale: 0.1 })
-            .to(scaleTime2 * this._animationSpeed, { scale: 0 })
-
+        
         cc.tween(this.node)
-            .then(scale)
-            .call(() => this.node.position = endPos)
-            // .to(0.4 * this.tile.pos.y, { position: endPos })
+            .to(0.4 * this.tile.pos.y, { position: endPos })
             .call(() => this._updateZindex())
-            // .by(scaleTime1 * this._animationSpeed, { scale: 1 })
-            .to(scaleTime2 * this._animationSpeed, { scale: 1 })
             .start()
     }
 
