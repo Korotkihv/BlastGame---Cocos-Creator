@@ -13,26 +13,19 @@ export const enum GridState {
 }
 
 export const enum GridChangesType {
-    Simple = 0,
+    None,
+    Simple,
     Booster,
     Reshufle
 }
 
-
 export class GridChangesInfo {
-    type: GridChangesType
+    type: GridChangesType = GridChangesType.None
     activeTile: Tile
     removedTiles: Array<Tile>
     dropTiles: Array<Tile>
     reshafle: boolean
     booster: Tile
-
-    constructor(type: GridChangesType, activeTile?: Tile) {
-        this.type = type
-        // TODO ???
-        this.activeTile = activeTile ? activeTile : null
-        this.reshafle = false
-    }
 }
 
 export class Grid {
@@ -40,6 +33,9 @@ export class Grid {
     private _board: Array<Array<Tile>> = []
     private _connectedTilesArray: Array<Tile> = []
     private _state = GridState.NotReady
+    private _gridChanges: GridChangesInfo = new GridChangesInfo()
+
+
     private _reshufleActivate = false
 
     constructor() {
@@ -257,25 +253,25 @@ export class Grid {
     }
 
     private _changeGrid(tile: Tile) {
-        let changeType = tile.isBooster ? GridChangesType.Booster : GridChangesType.Simple
-        let changes = new GridChangesInfo(changeType, tile)
+        this._gridChanges.type = tile.isBooster ? GridChangesType.Booster : GridChangesType.Simple
+        this._gridChanges.activeTile = tile
         
         if (tile.isBooster) {
-            changes.reshafle = tile.state == TileState.Reshafle
-            changes.removedTiles = this._boosterActivate(tile)
+            this._gridChanges.reshafle = tile.state == TileState.Reshafle
+            this._gridChanges.removedTiles = this._boosterActivate(tile)
         } else {
             if (this._canMakeMove(tile)) return
-            changes.removedTiles = this._removeConnectedTiles(tile)
-            if (changes.removedTiles.length >= Math.min(...Global.m.config.ListBoosterTilesCount)) {
-                this._createBomb(tile, changes.removedTiles.length)
+            this._gridChanges.removedTiles = this._removeConnectedTiles(tile)
+            if (this._gridChanges.removedTiles.length >= Math.min(...Global.m.config.ListBoosterTilesCount)) {
+                this._createBomb(tile,  this._gridChanges.removedTiles.length)
             }
         }
-        changes.dropTiles = this._dropTiles()
+        this._gridChanges.dropTiles = this._dropTiles()
         this._fillGrid()
-        if (this._needReshufle() || this._reshufleActivate) changes.reshafle = true
+        if (this._needReshufle() || this._reshufleActivate)  this._gridChanges.reshafle = true
 
-        this.onChangeGrid.dispatch(changes)
-        this._reshufleActivate = false
+        this.onChangeGrid.dispatch(this._gridChanges)
+        this._gridChanges = new GridChangesInfo()
     }
 
     private _canMakeMove(tile: Tile) {
@@ -295,7 +291,7 @@ export class Grid {
             case TileState.RemoveAll: removedTiles = this._useSuperBomb(); break
             case TileState.Reshafle:  
                 tile.remove()
-                this._reshufleActivate = true
+                this._gridChanges.reshafle = true
                 removedTiles = [tile]
                 break
             case TileState.Horizontal:
