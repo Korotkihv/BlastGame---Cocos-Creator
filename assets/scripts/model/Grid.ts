@@ -40,6 +40,7 @@ export class Grid {
     private _board: Array<Array<Tile>> = []
     private _connectedTilesArray: Array<Tile> = []
     private _state = GridState.NotReady
+    private _reshufleActivate = false
 
     constructor() {
        this._size = Global.m.config.GridSize
@@ -271,9 +272,10 @@ export class Grid {
         }
         changes.dropTiles = this._dropTiles()
         this._fillGrid()
-        if (this._needReshufle()) changes.reshafle = true
+        if (this._needReshufle() || this._reshufleActivate) changes.reshafle = true
 
         this.onChangeGrid.dispatch(changes)
+        this._reshufleActivate = false
     }
 
     private _canMakeMove(tile: Tile) {
@@ -293,7 +295,9 @@ export class Grid {
             case TileState.RemoveAll: removedTiles = this._useSuperBomb(); break
             case TileState.Reshafle:  
                 tile.remove()
-                removedTiles = [tile]; break
+                this._reshufleActivate = true
+                removedTiles = [tile]
+                break
             case TileState.Horizontal:
             case TileState.Vertical:
                 removedTiles = this._useLine(tile); break
