@@ -73,18 +73,21 @@
       },
       {
         "__id__": 5
+      },
+      {
+        "__id__": 10
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 10
+        "__id__": 13
       },
       {
-        "__id__": 11
+        "__id__": 14
       },
       {
-        "__id__": 12
+        "__id__": 15
       }
     ],
     "_prefab": null,
@@ -235,7 +238,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "startScreen",
+    "_name": "StartScreen",
     "_objFlags": 0,
     "_parent": {
       "__id__": 2
@@ -262,8 +265,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 1200,
-      "height": 675
+      "width": 1635,
+      "height": 1819
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -281,9 +284,9 @@
         0,
         0,
         1,
-        1.45,
-        1.45,
-        1
+        0.6,
+        0.6,
+        0.6
       ]
     },
     "_eulerAngles": {
@@ -339,16 +342,16 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        7.442,
-        113.017,
+        17.985,
+        311.911,
         0,
         0,
         0,
         0,
         1,
-        1,
-        1,
-        1
+        2.41667,
+        2.41667,
+        2.41667
       ]
     },
     "_eulerAngles": {
@@ -433,7 +436,7 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "ed82467f-9fc3-41ca-9059-27afe8f64334"
+      "__uuid__": "32af3498-e5d6-4fe5-b131-d041ee09ef1d"
     },
     "_type": 0,
     "_sizeMode": 1,
@@ -448,6 +451,132 @@
     "_isTrimmedMode": true,
     "_atlas": null,
     "_id": "dbHeiZ+fVJDbwp6R6+0iwL"
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "BlackScreen",
+    "_objFlags": 0,
+    "_parent": {
+      "__id__": 2
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 11
+      },
+      {
+        "__id__": 12
+      }
+    ],
+    "_prefab": null,
+    "_opacity": 0,
+    "_color": {
+      "__type__": "cc.Color",
+      "r": 0,
+      "g": 0,
+      "b": 0,
+      "a": 255
+    },
+    "_contentSize": {
+      "__type__": "cc.Size",
+      "width": 640,
+      "height": 960
+    },
+    "_anchorPoint": {
+      "__type__": "cc.Vec2",
+      "x": 0.5,
+      "y": 0.5
+    },
+    "_trs": {
+      "__type__": "TypedArray",
+      "ctor": "Float64Array",
+      "array": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "_eulerAngles": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_skewX": 0,
+    "_skewY": 0,
+    "_is3DNode": false,
+    "_groupIndex": 0,
+    "groupIndex": 0,
+    "_id": "5bIEWjjedNOoQmRnaJrAUr"
+  },
+  {
+    "__type__": "cc.Widget",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 10
+    },
+    "_enabled": true,
+    "alignMode": 1,
+    "_target": {
+      "__id__": 2
+    },
+    "_alignFlags": 45,
+    "_left": 0,
+    "_right": 0,
+    "_top": 0,
+    "_bottom": 0,
+    "_verticalCenter": 0,
+    "_horizontalCenter": 0,
+    "_isAbsLeft": true,
+    "_isAbsRight": true,
+    "_isAbsTop": true,
+    "_isAbsBottom": true,
+    "_isAbsHorizontalCenter": true,
+    "_isAbsVerticalCenter": true,
+    "_originalWidth": 960,
+    "_originalHeight": 640,
+    "_id": "4eWu20xaJPd4DHK4eCKbgi"
+  },
+  {
+    "__type__": "cc.Sprite",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 10
+    },
+    "_enabled": true,
+    "_materials": [
+      {
+        "__uuid__": "eca5d2f2-8ef6-41c2-bbe6-f9c79d09c432"
+      }
+    ],
+    "_srcBlendFactor": 770,
+    "_dstBlendFactor": 771,
+    "_spriteFrame": {
+      "__uuid__": "4dd9670b-0a69-42d7-9d92-f42a92559b7b"
+    },
+    "_type": 0,
+    "_sizeMode": 0,
+    "_fillType": 0,
+    "_fillCenter": {
+      "__type__": "cc.Vec2",
+      "x": 0,
+      "y": 0
+    },
+    "_fillStart": 0,
+    "_fillRange": 0,
+    "_isTrimmedMode": true,
+    "_atlas": null,
+    "_id": "b4cE9ovIJAvJBkaKWcZZrW"
   },
   {
     "__type__": "cc.Canvas",
@@ -502,7 +631,7 @@
     },
     "_enabled": true,
     "blackScreen": {
-      "__id__": 5
+      "__id__": 10
     },
     "_id": "e4vhgxtcBBtr79JtXrDLst"
   }

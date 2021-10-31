@@ -1,15 +1,26 @@
-import Global from "../../Global";
 import { SceneType } from "./SceneType";
+import Global from "../../Global";
 
 const {ccclass, property} = cc._decorator;
 
 @ccclass
 export default class Menu extends cc.Component {
-    onLoad() {
-        
+    @property(cc.Node) blackScreen: cc.Node = null
+
+    start() {
+        this.blackScreen.active = true
+        cc.tween(this.blackScreen)
+            .delay(0.3)
+            .to(Global.m.config.transitionBetweenScenesTime, { opacity: 0 })
+            .call(() => this.blackScreen.active = false)
+            .start()
     }
 
-    onNewGame() {
-        cc.director.loadScene(SceneType.Game)
+    onNewGameButton() {
+        cc.tween(this.blackScreen)
+            .call(() => this.blackScreen.active = true)
+            .to(Global.m.config.transitionBetweenScenesTime, { opacity: 255 })
+            .call(() => cc.director.loadScene(SceneType.Game))
+            .start()
     }
 }

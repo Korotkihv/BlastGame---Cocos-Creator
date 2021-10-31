@@ -1,7 +1,6 @@
 import { Grid, GridChangesInfo, GridChangesType } from "../../model/Grid";
 import TileNode from "./TileNode";
 import { Tile } from "../../model/Tile";
-import Global from "../../Global";
 import { Event } from "../../utils/Event";
 
 const { ccclass, property } = cc._decorator;
@@ -27,6 +26,7 @@ export default class GridNode extends cc.Component {
         this._grid = grid
         this._grid.board.forEach(r => r.forEach(t => this.createTile(t)))
         this._grid.onChangeGrid.add(this.node, (changesInfo: GridChangesInfo) => this.changeGrid(changesInfo))
+        this._grid.onAddBooster.add(this.node, (tile) => this.changeTile(tile))
     }
 
     createTile(tile: Tile) {
@@ -43,24 +43,28 @@ export default class GridNode extends cc.Component {
             this.boosterChange(changesInfo)
         }
     }
+    changeTile(tile: Tile) {
+        this.getTileNode(tile).updateTileIconAnimation()
+        this.onAnimationCompleted.dispatch()
+    }
 
     async simpleChange(changesInfo: GridChangesInfo) {
         await Promise.all(changesInfo.removedTiles.map(t => this.getTileNode(t).removeAnimation()))
         changesInfo.activeTile.isBooster && await this.getTileNode(changesInfo.activeTile).createBombAnimation()
         await Promise.all(changesInfo.dropTiles.map(t => this.getTileNode(t).dropAnimation()))
         await Promise.all(changesInfo.removedTiles.map(t => this.getTileNode(t).updateRemoveTileAnimation()))
-        await this.onAnimationCompleted.dispatch(changesInfo.reshafle)
+        await this.onAnimationCompleted.dispatch(changesInfo.reshuffle)
     }
 
     async boosterChange(changesInfo: GridChangesInfo) {
         await Promise.all(changesInfo.removedTiles.map(t => this.getTileNode(t).removeAnimation()))
         await Promise.all(changesInfo.dropTiles.map(t => this.getTileNode(t).dropAnimation()))
         await Promise.all(changesInfo.removedTiles.map(t => this.getTileNode(t).updateRemoveTileAnimation()))
-        await this.onAnimationCompleted.dispatch(changesInfo.reshafle)
+        await this.onAnimationCompleted.dispatch(changesInfo.reshuffle)
     }
 
-    async reshufleChange() {
-        await Promise.all(this.tiles.children.map(t => t.getComponent(TileNode).reshufleAnimation()))
+    async reshuffleChange() {
+        await Promise.all(this.tiles.children.map(t => t.getComponent(TileNode).reshuffleAnimation()))
         await this.onAnimationCompleted.dispatch()
     }
 }

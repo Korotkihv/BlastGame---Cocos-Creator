@@ -7,16 +7,16 @@ import Global from "../Global"
 export const enum GridState {
     NotReady = 0,
     Ready,
-    CheckCanMove,
     Move,
-    FullStop
+    FullStop,
+    SelectBooster
 }
 
 export const enum GridChangesType {
     None,
     Simple,
     Booster,
-    Reshufle
+    Reshuffle
 }
 
 export class GridChangesInfo {
@@ -24,7 +24,7 @@ export class GridChangesInfo {
     activeTile: Tile
     removedTiles: Array<Tile>
     dropTiles: Array<Tile>
-    reshafle: boolean
+    reshuffle: boolean
     booster: Tile
 }
 
@@ -34,28 +34,32 @@ export class Grid {
     private _connectedTilesArray: Array<Tile> = []
     private _state = GridState.NotReady
     private _gridChanges: GridChangesInfo = new GridChangesInfo()
+    private _waitSelectBoosterType: TileState = null
 
 
-    private _reshufleActivate = false
+    private _reshuffleActivate = false
 
     constructor() {
-       this._size = Global.m.config.GridSize
+       this._size = Global.m.config.gridSize
        this._addTiles()
     }
 
     onChangeGrid = new Event
+    onNoMoves = new Event
+    onAddBooster = new Event
 
     get rowsCount() { return this._size.x }
     get columnCount() { return this._size.y }
     get board() { return this._board }
     get isBlock() { return this._state == GridState.Move || this._state == GridState.FullStop }
+    get isSelectBooster() { return this._state == GridState.SelectBooster }
 
     removeBlock() {
         this._state = GridState.Ready
     }
 
-    reshufleGridIfNeeded(forceReshufle = false) {
-        if (!this._needReshufle() && !forceReshufle) return
+    reshuffleGridIfNeeded(forceReshuffle = false) {
+        if (!this._needReshuffle() && !forceReshuffle) return
         const updateAllTiles = () => {
             for (let row = 0; row < this._size.x; row++) {
                 for (let column = 0; column < this._size.y; column++) {
@@ -69,7 +73,12 @@ export class Grid {
         let newBoard = chunkArray(allTiles, this._size.x)
         this._board = newBoard
         updateAllTiles()
-        this.reshufleGridIfNeeded()
+        this.reshuffleGridIfNeeded()
+    }
+
+    waitTileSelectionBooster(type) {
+        this._state = GridState.SelectBooster
+        this._waitSelectBoosterType = type
     }
 
     logBoard() {
@@ -92,16 +101,21 @@ export class Grid {
                 let tile = new Tile(cc.v2(row, column))
                 tile.onAction.add(this, () => {
                     if (this.isBlock) return
+                    if (this.isSelectBooster) {
+                        this._state = GridState.Move
+                        this._selectBooster(tile)
+                        return
+                    }
                     this._state = GridState.Move
                     this._changeGrid(tile)
                 })
                 this._board[row].push(tile)
             }
         }
-        this.reshufleGridIfNeeded()
+        this.reshuffleGridIfNeeded()
     }
 
-    private _needReshufle() {
+    private _needReshuffle() {
         for (let row = 0; row < this._size.x; row++) {
             for (let column = 0; column < this._size.y; column++) {
                 let tilePos = cc.v2(row, column)
@@ -196,14 +210,14 @@ export class Grid {
 
     private _createBomb(tile: Tile, tilesRemoveCount: number) {
         let getBombType = tilesRemoveCount => {
-            if (tilesRemoveCount >= Global.m.config.BoosterMegaBombTilesCount) {
+            if (tilesRemoveCount >= Global.m.config.boosterMegaBombTilesCount) {
                 return TileState.RemoveAll
             // } else if (tilesRemoveCount >= Global.m.config.BoosterReshufleTilesCount) {
             //     return TileState.Reshafle
-            } else if (tilesRemoveCount >= Global.m.config.BoosterReshufleTilesCount) {
-                return TileState.Reshafle
+            } else if (tilesRemoveCount >= Global.m.config.boosterReshuffleTilesCount) {
+                return TileState.Reshuffle
             } else {
-                let boostersList = Global.m.config.SimpleBoostersList
+                let boostersList = Global.m.config.simpleBoostersList
                 return boostersList[randomInteger(0, boostersList.length - 1)]
             }
         }
@@ -224,7 +238,7 @@ export class Grid {
 
     private _useBomb(tile: Tile) {
         let r = []
-        let size = Global.m.config.BombRadius
+        let size = Global.m.config.bombRadius
         for (let row = tile.pos.x - size; row <= tile.pos.x + size; row++) {
             for (let column = tile.pos.y - size; column <= tile.pos.y + size; column++) {
                 if (this._isValidPick(cc.v2(row, column))) {
@@ -257,18 +271,22 @@ export class Grid {
         this._gridChanges.activeTile = tile
         
         if (tile.isBooster) {
-            this._gridChanges.reshafle = tile.state == TileState.Reshafle
+            this._gridChanges.reshuffle = tile.state == TileState.Reshuffle
             this._gridChanges.removedTiles = this._boosterActivate(tile)
         } else {
             if (this._canMakeMove(tile)) return
             this._gridChanges.removedTiles = this._removeConnectedTiles(tile)
-            if (this._gridChanges.removedTiles.length >= Math.min(...Global.m.config.ListBoosterTilesCount)) {
+            if (this._gridChanges.removedTiles.length >= Math.min(...Global.m.config.listBoosterTilesCount)) {
                 this._createBomb(tile,  this._gridChanges.removedTiles.length)
             }
         }
         this._gridChanges.dropTiles = this._dropTiles()
         this._fillGrid()
-        if (this._needReshufle() || this._reshufleActivate)  this._gridChanges.reshafle = true
+        let needReshuffle = this._needReshuffle()
+        if (needReshuffle || this._reshuffleActivate) {
+            needReshuffle && this.onNoMoves.dispatch()
+            this._gridChanges.reshuffle = true
+        }
 
         this.onChangeGrid.dispatch(this._gridChanges)
         this._gridChanges = new GridChangesInfo()
@@ -289,9 +307,9 @@ export class Grid {
         switch(tile.state) {
             case TileState.Bomb:      removedTiles = this._useBomb(tile); break
             case TileState.RemoveAll: removedTiles = this._useSuperBomb(); break
-            case TileState.Reshafle:  
+            case TileState.Reshuffle:  
                 tile.remove()
-                this._gridChanges.reshafle = true
+                this._gridChanges.reshuffle = true
                 removedTiles = [tile]
                 break
             case TileState.Horizontal:
@@ -299,5 +317,12 @@ export class Grid {
                 removedTiles = this._useLine(tile); break
         }
         return removedTiles
+    }
+
+    private _selectBooster(tile: Tile) {
+        this._getTile(tile.pos).state = this._waitSelectBoosterType
+        this._state = GridState.Ready
+        this._waitSelectBoosterType = null
+        this.onAddBooster.dispatch(tile)
     }
 } 

@@ -6,7 +6,6 @@ const { ccclass, property } = cc._decorator;
 @ccclass
 export default class TileNode extends cc.Component {
     @property(cc.Sprite) tileIcon: cc.Sprite = null
-    // TODO add loader
     @property([cc.SpriteFrame]) icons = new Array<cc.SpriteFrame>()
 
     private _tile: Tile
@@ -24,11 +23,15 @@ export default class TileNode extends cc.Component {
         this._tile.onNoCombo.add(this.node, () => this.noComboAnimation())
         this._updateZindex()
         this._tileSize = this.node.getContentSize().width
-        this._animationSpeed = Global.m.config.SpeedAnimation
+        this._animationSpeed = Global.m.config.speedAnimation
     }
 
     onClick() {
         this._tile.action()
+    }
+
+    updateTileIconAnimation() {
+        this.tileIcon.spriteFrame = this.icons[this._tile.state - 1]
     }
 
     noComboAnimation() {
@@ -38,7 +41,7 @@ export default class TileNode extends cc.Component {
             .to(rotationTime, { rotation: rotation })
             .to(rotationTime, { rotation: -rotation })
         
-        let zIndex = +("" + Global.m.config.GridSize.x + Global.m.config.GridSize.y + 1)
+        let zIndex = +("" + Global.m.config.gridSize.x + Global.m.config.gridSize.y + 1)
         cc.tween(this.node)
             .call(() => this.node.zIndex = zIndex)
             .then(rotate)
@@ -67,7 +70,7 @@ export default class TileNode extends cc.Component {
 
         let endPos = cc.v3(this.tile.pos.y * this._tileSize, -this.tile.pos.x * this._tileSize)
         const baseDelay = 0.018
-        const currentDelay = baseDelay * (Global.m.config.GridSize.y - this.tile.pos.x + 1)
+        const currentDelay = baseDelay * (Global.m.config.gridSize.y - this.tile.pos.x + 1)
 
         cc.tween(this.node)
             .delay(currentDelay * this._animationSpeed)
@@ -116,25 +119,23 @@ export default class TileNode extends cc.Component {
             .start()
     }) 
 
-    reshufleAnimation() {
+    reshuffleAnimation= () => new Promise(r => {
         let endPos = cc.v3(this.tile.pos.y * this._tileSize, -this.tile.pos.x * this._tileSize)
         
         cc.tween(this.node)
-            .to(0.4 * this.tile.pos.y, { position: endPos })
-            .call(() => this._updateZindex())
+            .to(0.2, { scale: 0 })
+            .call(() => {
+                this.node.position = endPos
+                this._updateZindex()
+            })
+            .delay(0.2)
+            .to(0.2, { scale: 1 })
+            .call(r)
             .start()
-    }
+    })
 
 
     private _updateZindex() {
         this.node.zIndex = -("" + this._tile.pos.x + this._tile.pos.y)
-    }
-
-    private _hideTile() {
-        this.node.opacity = 0
-    }
-
-    private _showTile() {
-        this.node.opacity = 255
     }
 }
