@@ -47,6 +47,12 @@ export class Game extends cc.Component {
         r()
     })
 
+    onExitSelectBooster()  {
+        this.chooseBoosterScreen.active = false
+        this.inventoryBoosterView.disableBooster()
+        this._grid.removeBlock()
+    }
+
     private _reshuffleGrid() {
         const forceReshuffle = true
         this._grid.reshuffleGridIfNeeded(forceReshuffle)
@@ -95,6 +101,7 @@ export class Game extends cc.Component {
             // TODO вынести reshuffle в модель
             this.gridView.onAnimationCompleted.add(this.node, needReshuffle => {
                 this.chooseBoosterScreen.active = this._grid.isSelectBooster
+                if (!this._grid.isSelectBooster) this.inventoryBoosterView.disableBooster()
                 if (needReshuffle) this._reshuffleGrid()
                 else if (this._grid.isSelectBooster) return
                 else this._grid.removeBlock()
@@ -109,6 +116,7 @@ export class Game extends cc.Component {
             b.getComponent(BoosterNode).onActivateBooster.replace(this.node, (t: TileState) =>  {
                 this.chooseBoosterScreen.active = true
                 this._grid.waitTileSelectionBooster(t)
+                this.inventoryBoosterView.selectBooster(t)
             })
         })
     }

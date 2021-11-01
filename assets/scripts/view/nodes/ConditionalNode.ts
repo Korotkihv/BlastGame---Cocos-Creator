@@ -6,7 +6,6 @@ export default class ConditionalNode extends cc.Component {
     @property(cc.Label) moves: cc.Label = null
     @property(cc.Label) goals: cc.Label = null
     @property(cc.Label) reshuffle: cc.Label = null
-    @property(cc.Label) test: cc.Label = null
     @property(cc.ProgressBar) progressMoves: cc.ProgressBar = null
     @property(cc.ProgressBar) progressGoals: cc.ProgressBar = null
 

@@ -12,6 +12,8 @@ export default class BoosterNode extends cc.Component {
 
     private _booster: Booster
 
+    get type() { return this._booster.type }
+
     onActivateBooster = new Event
 
     setBooster(booster: Booster) {

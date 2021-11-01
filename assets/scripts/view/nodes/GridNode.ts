@@ -24,7 +24,7 @@ export default class GridNode extends cc.Component {
     async createGrid(grid: Grid) {
         this._tileSize = this.tilePrefab.data.getContentSize().width
         this._grid = grid
-        this._grid.board.forEach(r => r.forEach(t => this.createTile(t)))
+        await this._grid.board.forEach(r => r.forEach(t => this.createTile(t)))
         this._grid.onChangeGrid.add(this.node, (changesInfo: GridChangesInfo) => this.changeGrid(changesInfo))
         this._grid.onAddBooster.add(this.node, (tile) => this.changeTile(tile))
     }
