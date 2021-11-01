@@ -1,3 +1,3 @@
-# BlastGame---Cocos-Creator
+# BlastGame
 
-# https://korotkihv.github.io/BlastGameDemo/
+# Demo: https://korotkihv.github.io/BlastGameDemo/
