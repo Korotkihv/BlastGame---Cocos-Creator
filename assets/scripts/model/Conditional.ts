@@ -11,7 +11,7 @@ export class Conditional {
     private _reshuffleCountWithEnd = 0
 
     constructor() {
-        let config = Global.m.config
+        let config = Global.config
         this._goals = config.conditional.goals
         this._moves = config.conditional.moves
         this._reshuffleCountWithEnd = config.reshuffleCountWithEndGame
@@ -20,9 +20,9 @@ export class Conditional {
     get goals() { return Math.max(this._goals, 0) }
     get moves() { return Math.max(this._moves, 0) }
     get reshuffleCount() { return Math.max(this._reshuffleCountWithEnd, 0) }
-    get goalsBase() { return Global.m.config.conditional.goals }
-    get movesBase() { return Global.m.config.conditional.moves }
-    get reshuffleCountBase() { return Global.m.config.reshuffleCountWithEndGame }
+    get goalsBase() { return Global.config.conditional.goals }
+    get movesBase() { return Global.config.conditional.moves }
+    get reshuffleCountBase() { return Global.config.reshuffleCountWithEndGame }
 
     onChange = new Event
     onEnd = new Event

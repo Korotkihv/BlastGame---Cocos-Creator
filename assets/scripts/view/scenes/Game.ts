@@ -29,7 +29,7 @@ export class Game extends cc.Component {
         this.chooseBoosterScreen.active = false
         this.newGame().then(() => {
             cc.tween(this.blackScreen)
-                .to(Global.m.config.transitionBetweenScenesTime, { opacity: 0 })
+                .to(Global.config.transitionBetweenScenesTime, { opacity: 0 })
                 .call(() => this.blackScreen.active = false)
                 .start()
         })
@@ -79,7 +79,7 @@ export class Game extends cc.Component {
                     .to(0.2, { scale: 0 })
                     .start()
                 let animBlackScreen = cc.tween(this.blackScreen)
-                    .to(Global.m.config.transitionBetweenScenesTime, { opacity: 255 })
+                    .to(Global.config.transitionBetweenScenesTime, { opacity: 255 })
                     .call(() => cc.director.loadScene(SceneType.Menu))
                     .start()
                 cc.tween(this.blackScreen).sequence(

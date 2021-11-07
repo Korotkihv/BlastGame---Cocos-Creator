@@ -40,7 +40,7 @@ export class Grid {
     private _reshuffleActivate = false
 
     constructor() {
-       this._size = Global.m.config.gridSize
+       this._size = Global.config.gridSize
        this._addTiles()
     }
 
@@ -210,14 +210,14 @@ export class Grid {
 
     private _createBomb(tile: Tile, tilesRemoveCount: number) {
         let getBombType = tilesRemoveCount => {
-            if (tilesRemoveCount >= Global.m.config.boosterMegaBombTilesCount) {
+            if (tilesRemoveCount >= Global.config.boosterMegaBombTilesCount) {
                 return TileState.RemoveAll
             // } else if (tilesRemoveCount >= Global.m.config.BoosterReshufleTilesCount) {
             //     return TileState.Reshafle
-            } else if (tilesRemoveCount >= Global.m.config.boosterReshuffleTilesCount) {
+            } else if (tilesRemoveCount >= Global.config.boosterReshuffleTilesCount) {
                 return TileState.Reshuffle
             } else {
-                let boostersList = Global.m.config.simpleBoostersList
+                let boostersList = Global.config.simpleBoostersList
                 return boostersList[randomInteger(0, boostersList.length - 1)]
             }
         }
@@ -238,7 +238,7 @@ export class Grid {
 
     private _useBomb(tile: Tile) {
         let r = []
-        let size = Global.m.config.bombRadius
+        let size = Global.config.bombRadius
         for (let row = tile.pos.x - size; row <= tile.pos.x + size; row++) {
             for (let column = tile.pos.y - size; column <= tile.pos.y + size; column++) {
                 if (this._isValidPick(cc.v2(row, column))) {
@@ -276,7 +276,7 @@ export class Grid {
         } else {
             if (this._canMakeMove(tile)) return
             this._gridChanges.removedTiles = this._removeConnectedTiles(tile)
-            if (this._gridChanges.removedTiles.length >= Math.min(...Global.m.config.listBoosterTilesCount)) {
+            if (this._gridChanges.removedTiles.length >= Math.min(...Global.config.listBoosterTilesCount)) {
                 this._createBomb(tile,  this._gridChanges.removedTiles.length)
             }
         }

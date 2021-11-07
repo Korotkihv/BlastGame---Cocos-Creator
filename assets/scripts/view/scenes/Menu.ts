@@ -11,7 +11,7 @@ export default class Menu extends cc.Component {
         this.blackScreen.active = true
         cc.tween(this.blackScreen)
             .delay(0.3)
-            .to(Global.m.config.transitionBetweenScenesTime, { opacity: 0 })
+            .to(Global.config.transitionBetweenScenesTime, { opacity: 0 })
             .call(() => this.blackScreen.active = false)
             .start()
     }
@@ -19,7 +19,7 @@ export default class Menu extends cc.Component {
     onNewGameButton() {
         cc.tween(this.blackScreen)
             .call(() => this.blackScreen.active = true)
-            .to(Global.m.config.transitionBetweenScenesTime, { opacity: 255 })
+            .to(Global.config.transitionBetweenScenesTime, { opacity: 255 })
             .call(() => cc.director.loadScene(SceneType.Game))
             .start()
     }

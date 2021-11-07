@@ -23,7 +23,7 @@ export default class TileNode extends cc.Component {
         this._tile.onNoCombo.add(this.node, () => this.noComboAnimation())
         this._updateZindex()
         this._tileSize = this.node.getContentSize().width
-        this._animationSpeed = Global.m.config.speedAnimation
+        this._animationSpeed = Global.config.speedAnimation
     }
 
     onClick() {
@@ -41,7 +41,7 @@ export default class TileNode extends cc.Component {
             .to(rotationTime, { rotation: rotation })
             .to(rotationTime, { rotation: -rotation })
         
-        let zIndex = +("" + Global.m.config.gridSize.x + Global.m.config.gridSize.y + 1)
+        let zIndex = +("" + Global.config.gridSize.x + Global.config.gridSize.y + 1)
         cc.tween(this.node)
             .call(() => this.node.zIndex = zIndex)
             .then(rotate)
@@ -70,7 +70,7 @@ export default class TileNode extends cc.Component {
 
         let endPos = cc.v3(this.tile.pos.y * this._tileSize, -this.tile.pos.x * this._tileSize)
         const baseDelay = 0.018
-        const currentDelay = baseDelay * (Global.m.config.gridSize.y - this.tile.pos.x + 1)
+        const currentDelay = baseDelay * (Global.config.gridSize.y - this.tile.pos.x + 1)
 
         cc.tween(this.node)
             .delay(currentDelay * this._animationSpeed)

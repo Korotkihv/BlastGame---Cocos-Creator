@@ -14,11 +14,10 @@ export default class Load extends cc.Component {
     }
     private _init() {
         return new Promise(r => {
-            Global.m = new Global()
             cc.director.preloadScene(SceneType.Menu)
             setTimeout(() => {
                 cc.tween(this.blackScreen)
-                    .to(Global.m.config.transitionBetweenScenesTime, { opacity: 255 })
+                    .to(Global.config.transitionBetweenScenesTime, { opacity: 255 })
                     .call(r)
                     .start()
             }, 1000)

@@ -18,7 +18,7 @@ export class InventoryBoosters {
     private _inventory: Array<Booster> = []
 
     constructor() {
-        let config = Global.m.config
+        let config = Global.config
         config.inventoryBoostersList.forEach(type => {
             let booster = new Booster()
             booster.type = type
