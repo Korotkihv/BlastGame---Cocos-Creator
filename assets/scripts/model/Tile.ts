@@ -1,5 +1,6 @@
 import { randomInteger } from "../utils/Utils"
 import { Event } from "../utils/Event"
+import { SimpleStrategy, GridRemoveStrategy, HorizontalStrategy, VerticalStrategy, BombStrategy, SuperBombStrategy } from "./GridRemover"
 
 export const enum TileState {
     Empty,
@@ -18,6 +19,12 @@ export const enum TileState {
     BoosterCount
 }
 
+export const typeToStrategy: Map<TileState, GridRemoveStrategy> = new Map([
+    [TileState.Horizontal, new HorizontalStrategy()],
+    [TileState.Vertical, new VerticalStrategy()],
+    [TileState.Bomb, new BombStrategy()],
+    [TileState.RemoveAll, new SuperBombStrategy()]
+])
 export class Tile {
     private _pos: cc.Vec2
     private _state: TileState
@@ -31,6 +38,7 @@ export class Tile {
     get isNormal() { return this._state != TileState.Empty && this._state != TileState.CountColor && this._state != TileState.BoosterCount }
     get isBooster() { return this.state > TileState.CountColor && this.state < TileState.BoosterCount}
     get isReshuffleBooster() { return this.state == TileState.Reshuffle}
+    get getRemoveStrategy() { return this.isBooster ? typeToStrategy.get(this._state) : new SimpleStrategy() }
     
     set state(s: TileState) { this._state = s }
 
@@ -41,10 +49,6 @@ export class Tile {
     constructor(pos: cc.Vec2, color?: TileState) {
         this._pos = pos
         this._state = color ? color : Tile.getRandomTile()
-    }
-
-    compare(tile: Tile) {
-        return tile.pos.x == this.pos.x && tile.pos.y == this.pos.y
     }
     
     action() { 
