@@ -51,6 +51,13 @@ export class Grid {
     get rowsCount() { return this._size.x }
     get columnCount() { return this._size.y }
     get board() { return this._board }
+    get listTiles() {
+        // return this._board.reduce((p, n) => p.concat(n) ,[])
+
+        let allTiles = []
+        this._board.forEach(r => allTiles = allTiles.concat(r))
+        return allTiles
+    }
     get isBlock() { return this._state == GridState.Move || this._state == GridState.FullStop }
     get isSelectBooster() { return this._state == GridState.SelectBooster }
 

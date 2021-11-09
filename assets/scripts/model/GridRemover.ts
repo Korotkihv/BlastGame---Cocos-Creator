@@ -1,4 +1,4 @@
-import { Tile } from "./Tile";
+import { Tile, TileState } from "./Tile";
 import { Grid } from "./Grid";
 import Global from "../Global";
 
@@ -56,14 +56,7 @@ export class BombStrategy implements GridRemoveStrategy {
 
 export class SuperBombStrategy implements GridRemoveStrategy {
     getRemoveTiles(tile: Tile, grid: Grid) {
-        let r = []
-        for (let row = 0; row < grid.rowsCount; row++) {
-            for (let column = 0; column < grid.columnCount; column++) {
-                // todo return grid
-                grid.board[row][column].remove()
-                r.push(grid.board[row][column])
-            }
-        }
-        return r
+        grid.listTiles.forEach((t: Tile) => t.remove())
+        return grid.listTiles
     }
 }
